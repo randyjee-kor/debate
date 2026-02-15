@@ -27,3 +27,18 @@ python run_debate.py "주제" --mode live
 ```bash
 python -m pytest -q
 ```
+
+
+## GitHub Pages 배포로 결과 확인
+
+이 저장소에는 토론 결과를 정적 페이지로 배포하는 워크플로우가 포함되어 있습니다.
+
+1. GitHub 저장소의 **Settings → Pages**에서 Source를 **GitHub Actions**로 설정합니다.
+2. **Actions → Build and Deploy Pages** 워크플로우를 실행합니다.
+   - 입력값 `topic`, `rounds`를 원하는 값으로 바꿀 수 있습니다.
+3. 완료 후 Actions 로그의 `page_url` 또는 Pages URL에서 결과를 확인합니다.
+
+워크플로우는 내부적으로 다음을 수행합니다.
+- `run_debate.py --mode mock`으로 `outputs/final_report.md` 생성
+- `scripts/build_pages.py`로 `site/index.html` 생성
+- `site/`를 GitHub Pages로 배포
