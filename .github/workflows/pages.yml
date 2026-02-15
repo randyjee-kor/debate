@@ -1,0 +1,61 @@
+name: Build and Deploy Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "토론 주제"
+        required: false
+        default: "사내 AI 도입 범위를 어디까지 확대할 것인가?"
+      rounds:
+        description: "토론 라운드 수"
+        required: false
+        default: "2"
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate report (mock mode)
+        run: |
+          python run_debate.py "${{ github.event.inputs.topic || '사내 AI 도입 범위를 어디까지 확대할 것인가?' }}" --rounds ${{ github.event.inputs.rounds || '2' }} --mode mock --out outputs/final_report.md
+
+      - name: Build static page
+        run: |
+          python scripts/build_pages.py --report outputs/final_report.md --site-dir site
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
